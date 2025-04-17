@@ -1,177 +1,102 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>ストラテジーゲーム</title>
+  <title>お宝探しゲーム</title>
   <style>
     body {
-      display: flex;
+      font-family: sans-serif;
+      background-color: #222;
+      color: #fff;
+      text-align: center;
+    }
+    #grid {
+      display: grid;
+      grid-template-columns: repeat(10, 40px);
+      grid-template-rows: repeat(10, 40px);
+      gap: 5px;
       justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-      font-size: 136%;
+      margin-top: 30px;
     }
-    #game-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      position: relative;
-    }
-    table {
-      border-collapse: collapse;
-      margin-top: 20px;
-    }
-    td {
-      width: 53px; height: 53px; border: 1px solid #333;
-      text-align: center; vertical-align: middle; font-size: 24px;
+    .cell {
+      width: 40px;
+      height: 40px;
+      background-color: #444;
+      border: 1px solid #666;
       cursor: pointer;
     }
-    .player { background-color: lightblue; }
-    .nike { background-color: lightcoral; }
-    #info {
-      display: flex;
-      justify-content: space-between;
-      width: 100%;
-      margin-bottom: 10px;
+    .cell.clicked {
+      background-color: #888;
+      cursor: not-allowed;
     }
-    #turnInfo {
-      text-align: left;
+    .cell.treasure {
+      background-color: gold;
     }
-    #score {
-      text-align: right;
+    #message {
+      margin-top: 20px;
+      font-size: 20px;
     }
-    #result { margin-top: 20px; font-weight: bold; text-align: center; }
   </style>
 </head>
 <body>
-  <div id="game-container">
-    <div id="info">
-      <div id="turnInfo">
-        <div>ターン数: <span id="turn">1</span></div>
-      </div>
-      <div id="score">
-        <div>あなたの獲得マス: <span id="playerScore">0</span></div>
-        <div>残り時間: <span id="timeLeft">5</span>秒</div>
-      </div>
-    </div>
-    <table id="board"></table>
-    <div id="result"></div>
-  </div>
+  <h1>お宝探しゲーム</h1>
+  <div id="grid"></div>
+  <div id="message"></div>
 
   <script>
-    const boardSize = 10;
-    const board = document.getElementById("board");
-    const turnDisplay = document.getElementById("turn");
-    const playerScoreDisplay = document.getElementById("playerScore");
-    const resultDisplay = document.getElementById("result");
-    const timeLeftDisplay = document.getElementById("timeLeft");
+    const grid = document.getElementById("grid");
+    const message = document.getElementById("message");
+    const size = 10;
+    let treasureX = Math.floor(Math.random() * size);
+    let treasureY = Math.floor(Math.random() * size);
+    let isPlayerTurn = true;
+    let gameEnded = false;
 
-    let turnCount = 1;
-    let playerScore = 0;
-    let nikeScore = 0;
-    let totalMoves = 0;
-    let currentPlayer = "player";
-    let timer;
-    let timeLeft = 5;
-    let countdown;
-
-    function updateScores() {
-      playerScoreDisplay.textContent = playerScore;
-    }
-
-    function endGame() {
-      let winner;
-      if (playerScore > nikeScore) winner = "あなた";
-      else if (nikeScore > playerScore) winner = "nike";
-      else winner = "引き分け";
-
-      resultDisplay.innerHTML = `ゲーム終了！<br>あなた: ${playerScore} マス<br>nike: ${nikeScore} マス<br><strong>勝者: ${winner}</strong>`;
-    }
-
-    function checkGameOver() {
-      if (totalMoves >= boardSize * boardSize) {
-        clearTimeout(timer);
-        clearInterval(countdown);
-        endGame();
-        return true;
-      }
-      return false;
-    }
-
-    function updateTimerDisplay() {
-      timeLeftDisplay.textContent = timeLeft;
-    }
-
-    function switchTurn() {
-      clearTimeout(timer);
-      clearInterval(countdown);
-      currentPlayer = currentPlayer === "player" ? "nike" : "player";
-      turnCount++;
-      turnDisplay.textContent = turnCount;
-
-      if (!checkGameOver()) {
-        if (currentPlayer === "nike") {
-          setTimeout(nikeTurn, 500);
-        } else {
-          startTimer();
-        }
+    // グリッドを生成
+    for (let y = 0; y < size; y++) {
+      for (let x = 0; x < size; x++) {
+        const cell = document.createElement("div");
+        cell.classList.add("cell");
+        cell.dataset.x = x;
+        cell.dataset.y = y;
+        cell.addEventListener("click", () => playerMove(cell));
+        grid.appendChild(cell);
       }
     }
 
-    function startTimer() {
-      timeLeft = 5;
-      updateTimerDisplay();
-      countdown = setInterval(() => {
-        timeLeft--;
-        updateTimerDisplay();
-        if (timeLeft <= 0) {
-          clearInterval(countdown);
+    function playerMove(cell) {
+      if (!isPlayerTurn || gameEnded || cell.classList.contains("clicked")) return;
+      cell.classList.add("clicked");
+      const x = parseInt(cell.dataset.x);
+      const y = parseInt(cell.dataset.y);
+      checkTreasure(x, y, "プレイヤー", cell);
+    }
+
+    function cpuMove() {
+      if (gameEnded) return;
+      const availableCells = [...document.querySelectorAll(".cell:not(.clicked)")];
+      if (availableCells.length === 0) return;
+      const randomCell = availableCells[Math.floor(Math.random() * availableCells.length)];
+      randomCell.classList.add("clicked");
+      const x = parseInt(randomCell.dataset.x);
+      const y = parseInt(randomCell.dataset.y);
+      checkTreasure(x, y, "CPU", randomCell);
+    }
+
+    function checkTreasure(x, y, player, cell) {
+      if (x === treasureX && y === treasureY) {
+        cell.classList.add("treasure");
+        message.textContent = `${player}の勝ち！ お宝を見つけた！`;
+        gameEnded = true;
+        return;
+      }
+      if (!gameEnded) {
+        isPlayerTurn = !isPlayerTurn;
+        if (!isPlayerTurn) {
+          setTimeout(cpuMove, 1000);
         }
-      }, 1000);
-      timer = setTimeout(() => {
-        switchTurn();
-      }, 5000);
-    }
-
-    function nikeTurn() {
-      const cells = Array.from(document.querySelectorAll("td"));
-      const emptyCells = cells.filter(c => c.textContent === "");
-      if (emptyCells.length === 0) return;
-      const cell = emptyCells[Math.floor(Math.random() * emptyCells.length)];
-      cell.textContent = "N";
-      cell.classList.add("nike");
-      nikeScore++;
-      totalMoves++;
-      checkGameOver() || switchTurn();
-    }
-
-    function handleClick(e) {
-      const cell = e.target;
-      if (currentPlayer !== "player" || cell.textContent !== "") return;
-
-      cell.textContent = "P";
-      cell.classList.add("player");
-      playerScore++;
-      totalMoves++;
-      updateScores();
-      checkGameOver() || switchTurn();
-    }
-
-    function createBoard() {
-      for (let i = 0; i < boardSize; i++) {
-        const row = document.createElement("tr");
-        for (let j = 0; j < boardSize; j++) {
-          const cell = document.createElement("td");
-          cell.addEventListener("click", handleClick);
-          row.appendChild(cell);
-        }
-        board.appendChild(row);
       }
     }
-
-    createBoard();
-    startTimer();
   </script>
 </body>
 </html>
