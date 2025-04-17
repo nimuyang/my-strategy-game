@@ -15,7 +15,7 @@
 
     <div id="log"></div>
 
-    <div id="enemy-img"><!-- 敵画像（あとでimg/ghost.pngとかに差し替え） --></div>
+    <div id="enemy-img" style="background-image: url('img/F-chara Dragon knight01.png');"></div>
 
     <div id="commands">
       <button onclick="attack()">攻撃</button>
