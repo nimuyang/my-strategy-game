@@ -87,7 +87,7 @@ function moveForward() {
   log("敵はいなかった。先へ進む...");
 }
 
-// ゲーム開始
+// 探索開始
 updateHP();
 updateCoins();
 moveForward();
