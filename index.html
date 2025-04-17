@@ -4,27 +4,56 @@
   <meta charset="UTF-8">
   <title>ストラテジーゲーム</title>
   <style>
-    table { border-collapse: collapse; margin-top: 20px; }
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      font-size: 115%;
+    }
+    #game-container {
+      position: relative;
+    }
+    table {
+      border-collapse: collapse;
+      margin-top: 20px;
+      margin-left: auto;
+      margin-right: auto;
+    }
     td {
-      width: 40px; height: 40px; border: 1px solid #333;
-      text-align: center; vertical-align: middle; font-size: 18px;
+      width: 46px; height: 46px; border: 1px solid #333;
+      text-align: center; vertical-align: middle; font-size: 20px;
       cursor: pointer;
     }
     .player { background-color: lightblue; }
     .nike { background-color: lightcoral; }
-    #info { position: absolute; top: 10px; right: 10px; text-align: right; }
-    #result { margin-top: 20px; font-weight: bold; }
+    #info {
+      position: absolute;
+      top: -60px;
+      left: 50%;
+      transform: translateX(-50%);
+      text-align: center;
+    }
+    #timer {
+      position: absolute;
+      top: 0;
+      right: -150px;
+      font-weight: bold;
+    }
+    #result { margin-top: 20px; font-weight: bold; text-align: center; }
   </style>
 </head>
 <body>
-  <div id="info">
-    <div>ターン数: <span id="turn">1</span></div>
-    <div>あなたの獲得マス: <span id="playerScore">0</span></div>
+  <div id="game-container">
+    <div id="info">
+      <div>ターン数: <span id="turn">1</span></div>
+      <div>あなたの獲得マス: <span id="playerScore">0</span></div>
+    </div>
+    <div id="timer">残り時間: <span id="timeLeft">10</span>秒</div>
+    <table id="board"></table>
+    <div id="result"></div>
   </div>
-
-  <table id="board"></table>
-
-  <div id="result"></div>
 
   <script>
     const boardSize = 5;
@@ -32,6 +61,7 @@
     const turnDisplay = document.getElementById("turn");
     const playerScoreDisplay = document.getElementById("playerScore");
     const resultDisplay = document.getElementById("result");
+    const timeLeftDisplay = document.getElementById("timeLeft");
 
     let turnCount = 1;
     let playerScore = 0;
@@ -39,6 +69,8 @@
     let totalMoves = 0;
     let currentPlayer = "player"; // "player" or "nike"
     let timer;
+    let timeLeft = 10;
+    let countdown;
 
     function updateScores() {
       playerScoreDisplay.textContent = playerScore;
@@ -56,14 +88,20 @@
     function checkGameOver() {
       if (totalMoves >= boardSize * boardSize) {
         clearTimeout(timer);
+        clearInterval(countdown);
         endGame();
         return true;
       }
       return false;
     }
 
+    function updateTimerDisplay() {
+      timeLeftDisplay.textContent = timeLeft;
+    }
+
     function switchTurn() {
       clearTimeout(timer);
+      clearInterval(countdown);
       currentPlayer = currentPlayer === "player" ? "nike" : "player";
       turnCount++;
       turnDisplay.textContent = turnCount;
@@ -78,9 +116,18 @@
     }
 
     function startTimer() {
+      timeLeft = 10;
+      updateTimerDisplay();
+      countdown = setInterval(() => {
+        timeLeft--;
+        updateTimerDisplay();
+        if (timeLeft <= 0) {
+          clearInterval(countdown);
+        }
+      }, 1000);
       timer = setTimeout(() => {
         switchTurn();
-      }, 10000); // 10秒
+      }, 10000);
     }
 
     function nikeTurn() {
