@@ -10,36 +10,36 @@
       align-items: center;
       height: 100vh;
       margin: 0;
-      font-size: 115%;
+      font-size: 132%;
     }
     #game-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
       position: relative;
     }
     table {
       border-collapse: collapse;
       margin-top: 20px;
-      margin-left: auto;
-      margin-right: auto;
     }
     td {
-      width: 46px; height: 46px; border: 1px solid #333;
-      text-align: center; vertical-align: middle; font-size: 20px;
+      width: 53px; height: 53px; border: 1px solid #333;
+      text-align: center; vertical-align: middle; font-size: 24px;
       cursor: pointer;
     }
     .player { background-color: lightblue; }
     .nike { background-color: lightcoral; }
     #info {
-      position: absolute;
-      top: -60px;
-      left: 50%;
-      transform: translateX(-50%);
-      text-align: center;
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      margin-bottom: 10px;
     }
-    #timer {
-      position: absolute;
-      top: 0;
-      right: -150px;
-      font-weight: bold;
+    #turnInfo {
+      text-align: left;
+    }
+    #score {
+      text-align: right;
     }
     #result { margin-top: 20px; font-weight: bold; text-align: center; }
   </style>
@@ -47,10 +47,14 @@
 <body>
   <div id="game-container">
     <div id="info">
-      <div>ターン数: <span id="turn">1</span></div>
-      <div>あなたの獲得マス: <span id="playerScore">0</span></div>
+      <div id="turnInfo">
+        <div>ターン数: <span id="turn">1</span></div>
+      </div>
+      <div id="score">
+        <div>あなたの獲得マス: <span id="playerScore">0</span></div>
+        <div>残り時間: <span id="timeLeft">5</span>秒</div>
+      </div>
     </div>
-    <div id="timer">残り時間: <span id="timeLeft">10</span>秒</div>
     <table id="board"></table>
     <div id="result"></div>
   </div>
@@ -67,9 +71,9 @@
     let playerScore = 0;
     let nikeScore = 0;
     let totalMoves = 0;
-    let currentPlayer = "player"; // "player" or "nike"
+    let currentPlayer = "player";
     let timer;
-    let timeLeft = 10;
+    let timeLeft = 5;
     let countdown;
 
     function updateScores() {
@@ -116,7 +120,7 @@
     }
 
     function startTimer() {
-      timeLeft = 10;
+      timeLeft = 5;
       updateTimerDisplay();
       countdown = setInterval(() => {
         timeLeft--;
@@ -127,7 +131,7 @@
       }, 1000);
       timer = setTimeout(() => {
         switchTurn();
-      }, 10000);
+      }, 5000);
     }
 
     function nikeTurn() {
