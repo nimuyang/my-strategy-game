@@ -45,20 +45,28 @@
     .disabled {
       pointer-events: none;
     }
-    #message {
-      font-size: 1.2em;
+    #header {
+      display: flex;
+      justify-content: space-between;
+      width: 400px;
       margin-bottom: 10px;
     }
   </style>
 </head>
 <body>
   <h1>宝探しゲーム</h1>
-  <div id="message">あなたの番です！</div>
+  <div id="header">
+    <div id="player-score">プレイヤー 発見率 0/3</div>
+    <div id="message">あなたの番です！</div>
+    <div id="cpu-score">CPU 発見率 0/3</div>
+  </div>
   <div id="grid"></div>
 
   <script>
     const grid = document.getElementById("grid");
     const message = document.getElementById("message");
+    const playerScore = document.getElementById("player-score");
+    const cpuScore = document.getElementById("cpu-score");
 
     const SIZE = 10;
     const TREASURE_COUNT = 3;
@@ -68,7 +76,11 @@
     let isPlayerTurn = true;
     let cells = [];
 
-    // 初期化
+    function updateScores() {
+      playerScore.textContent = `プレイヤー 発見率 ${playerFound}/3`;
+      cpuScore.textContent = `CPU 発見率 ${cpuFound}/3`;
+    }
+
     function init() {
       for (let i = 0; i < SIZE * SIZE; i++) {
         const cell = document.createElement("div");
@@ -79,7 +91,6 @@
         cells.push(cell);
       }
 
-      // お宝ランダム配置
       while (treasures.length < TREASURE_COUNT) {
         const rand = Math.floor(Math.random() * SIZE * SIZE);
         if (!treasures.includes(rand)) treasures.push(rand);
@@ -97,7 +108,8 @@
         cell.textContent = "P";
         playerFound++;
         message.textContent = `お宝発見！ あなた: ${playerFound} / 3`;
-        if (playerFound === TREASURE_COUNT) {
+        updateScores();
+        if (playerFound === 2) {
           endGame("🎉 あなたの勝ち！");
           return;
         }
@@ -106,15 +118,15 @@
       }
 
       isPlayerTurn = false;
-      setTimeout(cpuTurn, 2000);
+      setTimeout(cpuTurn, 1000);
     }
 
     function cpuTurn() {
       message.textContent = "CPUの番です...";
 
       const available = cells
-        .map((cell, i) => ({cell, index: i}))
-        .filter(({cell}) =>
+        .map((cell, i) => ({ cell, index: i }))
+        .filter(({ cell }) =>
           !cell.classList.contains("player") &&
           !cell.classList.contains("cpu") &&
           !cell.classList.contains("treasure")
@@ -122,14 +134,15 @@
 
       if (available.length === 0) return;
 
-      const {index, cell} = available[Math.floor(Math.random() * available.length)];
+      const { index, cell } = available[Math.floor(Math.random() * available.length)];
 
       if (treasures.includes(index)) {
         cell.classList.add("treasure");
         cell.textContent = "N";
         cpuFound++;
         message.textContent = `CPUが宝を見つけた！ CPU: ${cpuFound} / 3`;
-        if (cpuFound === TREASURE_COUNT) {
+        updateScores();
+        if (cpuFound === 2) {
           endGame("😈 CPUの勝ち！");
           return;
         }
@@ -140,7 +153,7 @@
       setTimeout(() => {
         isPlayerTurn = true;
         message.textContent = "あなたの番です！";
-      }, 2000);
+      }, 1000);
     }
 
     function endGame(result) {
@@ -149,6 +162,7 @@
     }
 
     init();
+    updateScores();
   </script>
 </body>
 </html>
