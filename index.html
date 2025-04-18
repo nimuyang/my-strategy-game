@@ -25,12 +25,22 @@
       background: #444;
       border: 1px solid #666;
       cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 18px;
     }
     .player {
       background: blue !important;
     }
     .cpu {
       background: red !important;
+    }
+    .treasure {
+      background: yellow !important;
+      color: black !important;
+      pointer-events: none;
     }
     .disabled {
       pointer-events: none;
@@ -60,7 +70,6 @@
 
     // 初期化
     function init() {
-      // グリッド生成
       for (let i = 0; i < SIZE * SIZE; i++) {
         const cell = document.createElement("div");
         cell.classList.add("cell");
@@ -70,7 +79,7 @@
         cells.push(cell);
       }
 
-      // お宝をランダムに配置
+      // お宝ランダム配置
       while (treasures.length < TREASURE_COUNT) {
         const rand = Math.floor(Math.random() * SIZE * SIZE);
         if (!treasures.includes(rand)) treasures.push(rand);
@@ -81,10 +90,20 @@
       if (!isPlayerTurn) return;
 
       const cell = cells[index];
-      if (cell.classList.contains("player") || cell.classList.contains("cpu")) return;
+      if (cell.classList.contains("player") || cell.classList.contains("cpu") || cell.classList.contains("treasure")) return;
 
-      cell.classList.add("player");
-      checkTreasure(index, "player");
+      if (treasures.includes(index)) {
+        cell.classList.add("treasure");
+        cell.textContent = "P";
+        playerFound++;
+        message.textContent = `お宝発見！ あなた: ${playerFound} / 3`;
+        if (playerFound === TREASURE_COUNT) {
+          endGame("🎉 あなたの勝ち！");
+          return;
+        }
+      } else {
+        cell.classList.add("player");
+      }
 
       isPlayerTurn = false;
       setTimeout(cpuTurn, 2000);
@@ -93,41 +112,35 @@
     function cpuTurn() {
       message.textContent = "CPUの番です...";
 
-      // 選んでないマスを取得
       const available = cells
         .map((cell, i) => ({cell, index: i}))
-        .filter(({cell}) => !cell.classList.contains("player") && !cell.classList.contains("cpu"));
+        .filter(({cell}) =>
+          !cell.classList.contains("player") &&
+          !cell.classList.contains("cpu") &&
+          !cell.classList.contains("treasure")
+        );
 
       if (available.length === 0) return;
 
-      // 攻め姿勢でランダムに選択
-      const {index} = available[Math.floor(Math.random() * available.length)];
-      const cell = cells[index];
-      cell.classList.add("cpu");
-      checkTreasure(index, "cpu");
+      const {index, cell} = available[Math.floor(Math.random() * available.length)];
+
+      if (treasures.includes(index)) {
+        cell.classList.add("treasure");
+        cell.textContent = "N";
+        cpuFound++;
+        message.textContent = `CPUが宝を見つけた！ CPU: ${cpuFound} / 3`;
+        if (cpuFound === TREASURE_COUNT) {
+          endGame("😈 CPUの勝ち！");
+          return;
+        }
+      } else {
+        cell.classList.add("cpu");
+      }
 
       setTimeout(() => {
         isPlayerTurn = true;
         message.textContent = "あなたの番です！";
       }, 2000);
-    }
-
-    function checkTreasure(index, player) {
-      if (treasures.includes(index)) {
-        if (player === "player") {
-          playerFound++;
-          message.textContent = `お宝発見！ あなた: ${playerFound} / 3`;
-          if (playerFound === TREASURE_COUNT) {
-            endGame("🎉 あなたの勝ち！");
-          }
-        } else {
-          cpuFound++;
-          message.textContent = `CPUが宝を見つけた！ CPU: ${cpuFound} / 3`;
-          if (cpuFound === TREASURE_COUNT) {
-            endGame("😈 CPUの勝ち！");
-          }
-        }
-      }
     }
 
     function endGame(result) {
