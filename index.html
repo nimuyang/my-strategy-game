@@ -1,102 +1,141 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <title>お宝探しゲーム</title>
+  <meta charset="UTF-8" />
+  <title>宝探しストラテジーゲーム</title>
   <style>
     body {
       font-family: sans-serif;
-      background-color: #222;
+      background: #222;
       color: #fff;
-      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
     }
     #grid {
       display: grid;
       grid-template-columns: repeat(10, 40px);
-      grid-template-rows: repeat(10, 40px);
-      gap: 5px;
-      justify-content: center;
-      margin-top: 30px;
+      grid-gap: 5px;
+      margin-bottom: 20px;
     }
     .cell {
       width: 40px;
       height: 40px;
-      background-color: #444;
+      background: #444;
       border: 1px solid #666;
       cursor: pointer;
     }
-    .cell.clicked {
-      background-color: #888;
-      cursor: not-allowed;
+    .player {
+      background: blue !important;
     }
-    .cell.treasure {
-      background-color: gold;
+    .cpu {
+      background: red !important;
+    }
+    .disabled {
+      pointer-events: none;
     }
     #message {
-      margin-top: 20px;
-      font-size: 20px;
+      font-size: 1.2em;
+      margin-bottom: 10px;
     }
   </style>
 </head>
 <body>
-  <h1>お宝探しゲーム</h1>
+  <h1>宝探しゲーム</h1>
+  <div id="message">あなたの番です！</div>
   <div id="grid"></div>
-  <div id="message"></div>
 
   <script>
     const grid = document.getElementById("grid");
     const message = document.getElementById("message");
-    const size = 10;
-    let treasureX = Math.floor(Math.random() * size);
-    let treasureY = Math.floor(Math.random() * size);
-    let isPlayerTurn = true;
-    let gameEnded = false;
 
-    // グリッドを生成
-    for (let y = 0; y < size; y++) {
-      for (let x = 0; x < size; x++) {
+    const SIZE = 10;
+    const TREASURE_COUNT = 3;
+    let playerFound = 0;
+    let cpuFound = 0;
+    let treasures = [];
+    let isPlayerTurn = true;
+    let cells = [];
+
+    // 初期化
+    function init() {
+      // グリッド生成
+      for (let i = 0; i < SIZE * SIZE; i++) {
         const cell = document.createElement("div");
         cell.classList.add("cell");
-        cell.dataset.x = x;
-        cell.dataset.y = y;
-        cell.addEventListener("click", () => playerMove(cell));
+        cell.dataset.index = i;
+        cell.addEventListener("click", () => handlePlayerTurn(i));
         grid.appendChild(cell);
+        cells.push(cell);
+      }
+
+      // お宝をランダムに配置
+      while (treasures.length < TREASURE_COUNT) {
+        const rand = Math.floor(Math.random() * SIZE * SIZE);
+        if (!treasures.includes(rand)) treasures.push(rand);
       }
     }
 
-    function playerMove(cell) {
-      if (!isPlayerTurn || gameEnded || cell.classList.contains("clicked")) return;
-      cell.classList.add("clicked");
-      const x = parseInt(cell.dataset.x);
-      const y = parseInt(cell.dataset.y);
-      checkTreasure(x, y, "プレイヤー", cell);
+    function handlePlayerTurn(index) {
+      if (!isPlayerTurn) return;
+
+      const cell = cells[index];
+      if (cell.classList.contains("player") || cell.classList.contains("cpu")) return;
+
+      cell.classList.add("player");
+      checkTreasure(index, "player");
+
+      isPlayerTurn = false;
+      setTimeout(cpuTurn, 2000);
     }
 
-    function cpuMove() {
-      if (gameEnded) return;
-      const availableCells = [...document.querySelectorAll(".cell:not(.clicked)")];
-      if (availableCells.length === 0) return;
-      const randomCell = availableCells[Math.floor(Math.random() * availableCells.length)];
-      randomCell.classList.add("clicked");
-      const x = parseInt(randomCell.dataset.x);
-      const y = parseInt(randomCell.dataset.y);
-      checkTreasure(x, y, "CPU", randomCell);
+    function cpuTurn() {
+      message.textContent = "CPUの番です...";
+
+      // 選んでないマスを取得
+      const available = cells
+        .map((cell, i) => ({cell, index: i}))
+        .filter(({cell}) => !cell.classList.contains("player") && !cell.classList.contains("cpu"));
+
+      if (available.length === 0) return;
+
+      // 攻め姿勢でランダムに選択
+      const {index} = available[Math.floor(Math.random() * available.length)];
+      const cell = cells[index];
+      cell.classList.add("cpu");
+      checkTreasure(index, "cpu");
+
+      setTimeout(() => {
+        isPlayerTurn = true;
+        message.textContent = "あなたの番です！";
+      }, 2000);
     }
 
-    function checkTreasure(x, y, player, cell) {
-      if (x === treasureX && y === treasureY) {
-        cell.classList.add("treasure");
-        message.textContent = `${player}の勝ち！ お宝を見つけた！`;
-        gameEnded = true;
-        return;
-      }
-      if (!gameEnded) {
-        isPlayerTurn = !isPlayerTurn;
-        if (!isPlayerTurn) {
-          setTimeout(cpuMove, 1000);
+    function checkTreasure(index, player) {
+      if (treasures.includes(index)) {
+        if (player === "player") {
+          playerFound++;
+          message.textContent = `お宝発見！ あなた: ${playerFound} / 3`;
+          if (playerFound === TREASURE_COUNT) {
+            endGame("🎉 あなたの勝ち！");
+          }
+        } else {
+          cpuFound++;
+          message.textContent = `CPUが宝を見つけた！ CPU: ${cpuFound} / 3`;
+          if (cpuFound === TREASURE_COUNT) {
+            endGame("😈 CPUの勝ち！");
+          }
         }
       }
     }
+
+    function endGame(result) {
+      message.textContent = result;
+      cells.forEach(cell => cell.classList.add("disabled"));
+    }
+
+    init();
   </script>
 </body>
 </html>
