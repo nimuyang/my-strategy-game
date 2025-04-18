@@ -13,12 +13,14 @@
       align-items: center;
       padding: 20px;
     }
+
     #grid {
       display: grid;
       grid-template-columns: repeat(10, 40px);
       grid-gap: 5px;
       margin-bottom: 20px;
     }
+
     .cell {
       width: 40px;
       height: 40px;
@@ -31,25 +33,36 @@
       font-weight: bold;
       font-size: 18px;
     }
+
     .player {
       background: blue !important;
     }
+
     .cpu {
       background: red !important;
     }
+
     .treasure {
       background: yellow !important;
       color: black !important;
       pointer-events: none;
     }
+
     .disabled {
       pointer-events: none;
     }
+
     #header {
       display: flex;
       justify-content: space-between;
-      width: 400px;
+      width: 420px;
       margin-bottom: 10px;
+    }
+
+    #message {
+      font-size: 20px;
+      font-weight: bold;
+      white-space: nowrap;
     }
   </style>
 </head>
